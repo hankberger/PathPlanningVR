@@ -32,11 +32,11 @@ orbitControls.update();
 
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 var material = new THREE.MeshToonMaterial( { color: "#433F81" } );
-var cube = new THREE.Mesh( geometry, material );
-cube.castShadow = true;
+// var cube = new THREE.Mesh( geometry, material );
+// cube.castShadow = true;
 
-// Add cube to Scene
-scene.add( cube );
+// // Add cube to Scene
+// scene.add( cube );
 
 
 // // LIGHTS
@@ -45,7 +45,7 @@ scene.add( cube );
 // // FLOOR
 // generateFloor()
 
-// // MODEL WITH ANIMATIONS
+//Load Model
 new GLTFLoader().load('soldier.glb', function (gltf) {
     const model = gltf.scene;
     model.traverse(function (object: any) {
@@ -91,6 +91,8 @@ function generateFloor() {
     scene.add(floor)
 }
 
+generateFloor();
+
 // function light() {
 //     scene.add(new THREE.AmbientLight(0xffffff, 0.7))
 
@@ -113,8 +115,8 @@ function generateFloor() {
 var render = function () {
     requestAnimationFrame( render );
   
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    // cube.rotation.x += 0.01;
+    // cube.rotation.y += 0.01;
   
     // Render the scene
     renderer.render(scene, camera);
