@@ -1,6 +1,6 @@
 // import { CharacterControls } from './characterControls';
 import * as THREE from 'three'
-import { CameraHelper, Object3D, Vector3 } from 'three';
+import { AnimationMixer, CameraHelper, Object3D, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
@@ -104,16 +104,19 @@ cube.castShadow = true;
 
 // // FLOOR
 // generateFloor()
-
+let mixer: AnimationMixer;
 //Load Model
 new GLTFLoader().load('scalefix.gltf', function (gltf) {
     const model = gltf.scene;
     model.castShadow = true;
+    model.traverse(c=>{
+          c.castShadow = true;
+    });
     dummy = model.children[0];
     
 
     const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
-    const mixer = new THREE.AnimationMixer(model);
+    mixer = new THREE.AnimationMixer(model);
     const animationsMap: Map<string, THREE.AnimationAction> = new Map();
     console.log(animationsMap);
     gltfAnimations.filter(a => a.name != 'TPose').forEach((a: THREE.AnimationClip) => {
@@ -123,7 +126,6 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     console.log(anim);
     anim?.play();
     scene.add(model);
-
 });
 
 // const loader = new FBXLoader();
@@ -275,6 +277,10 @@ var render = function () {
   
     // Render the scene
     renderer.render(scene, camera);
+    if(mixer){
+      mixer.update(.015);
+    }
+    
 
     // if ( movements.length > 0 ) {
     //   move( dummy, movements[ 0 ] );
