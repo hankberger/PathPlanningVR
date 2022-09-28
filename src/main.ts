@@ -38,7 +38,7 @@ let movements: Vector3[] = [];
 let objects: THREE.Object3D[] = [];
 let dummy: THREE.Object3D;
 // const textureLoader = new THREE.TextureLoader('');
-const speed = .1;
+const speed = .04;
 
 function stopMovement() {
   movements = [];
@@ -112,7 +112,8 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     model.traverse(c=>{
           c.castShadow = true;
     });
-    dummy = model.children[0];
+    dummy = model;
+    console.log("dummy:", dummy);
     
 
     const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
@@ -281,10 +282,11 @@ var render = function () {
       mixer.update(.015);
     }
     
+    
 
-    // if ( movements.length > 0 ) {
-    //   move( dummy, movements[ 0 ] );
-    // }
+    if ( movements.length > 0 ) {
+      move( dummy, movements[ 0 ] );
+    }
   };
   
   render();
