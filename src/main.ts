@@ -1,6 +1,6 @@
 // import { CharacterControls } from './characterControls';
 import * as THREE from 'three'
-import { AnimationMixer, CameraHelper, Object3D, Vector3 } from 'three';
+import { AnimationMixer, CameraHelper, Color, Object3D, Vector2, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
@@ -37,51 +37,77 @@ orbitControls.update();
 let movements: Vector3[] = [];
 let objects: THREE.Object3D[] = [];
 let dummy: THREE.Object3D;
+let rotationSet = false;
+const speed = .025;
 // const textureLoader = new THREE.TextureLoader('');
-const speed = .04;
 
 function stopMovement() {
   movements = [];
 }
 
-function move(agent: Object3D, destination: Vector3){
-  let posX = agent.position.x;
-  let posY = agent.position.z;
+const axesHelper = new THREE.AxesHelper( 5 );
+axesHelper.setColors( new Color(0, 0, 255), new Color(255, 0,0), new Color(0, 255, 0));
+axesHelper.position.set(-8, 0 , -8);
+scene.add( axesHelper );
 
-  let newX = destination.x;
-  let newY = destination.z;
 
-  let multiplierX = 1;
-  let multiplierY = 1;
+function move(agent: Object3D, destination: Vector3, dt: number){
+  let curPos = new Vector2(agent.position.x, agent.position.z);
+  let goalPos = new Vector2(destination.x, destination.z)
+  
+  let dir = goalPos.sub(curPos);
 
-  let diffX = Math.abs(posX - newX);
-  let diffY = Math.abs(posX - posY);
-  let distance = Math.sqrt( diffX * diffX + diffY * diffY );
-
-  if(posX > newX){
-    multiplierX = -1;
+  if(!rotationSet){
+    agent.lookAt(dir.x, 0, dir.y);
+    rotationSet = true;
   }
 
-  if(posY > newY){
-    multiplierY = -1;
+  if(dir.length() < .25){
+    movements.shift();
+    rotationSet = false;
+    return;
   }
 
-  agent.position.x = agent.position.x + (speed*(diffX / distance)) * multiplierX;
-  agent.position.z = agent.position.z + (speed*(diffY / distance)) * multiplierY;
-  console.log("moving!", agent.position);
-   // If the position is close we can call the movement complete.
-   if (( Math.floor( agent.position.x ) <= Math.floor( newX ) + .3 && 
-      Math.floor( agent.position.x ) >= Math.floor( newX ) - .3 ) &&
-    ( Math.floor( agent.position.z ) <= Math.floor( newY ) + .3 && 
-      Math.floor( agent.position.z ) >= Math.floor( newY ) - .3 )) {
-    agent.position.x = Math.floor( agent.position.x );
-    agent.position.z = Math.floor( agent.position.z );
+  if(!((speed*dt) > dir.length())){
+    dir.normalize();
+  } else {
+    agent.position.x = destination.x;
+    agent.position.z = destination.z;
+  }
 
-    // Reset any movements.
-    stopMovement();
+  
 
-    // Maybe move should return a boolean. True if completed, false if not. 
-    }
+  const vel = dir.multiplyScalar(speed);
+  const pos3d = new Vector3(vel.x, 0, vel.y);
+  agent.position.add(new Vector3(vel.x, 0, vel.y));
+  // console.log("moved!")
+
+  // let distance = Math.sqrt( diffX * diffX + diffY * diffY );
+
+  // if(posX > newX){
+  //   multiplierX = -1;
+  // }
+
+  // if(posY > newY){
+  //   multiplierY = -1;
+  // }
+
+  // agent.position.x = agent.position.x + (speed*(diffX / distance)) * multiplierX;
+  // agent.position.z = agent.position.z + (speed*(diffY / distance)) * multiplierY;
+  // console.log("moving!", agent.position);
+  //  // If the position is close we can call the movement complete.
+  //  if (( Math.floor( agent.position.x ) <= Math.floor( newX ) + .3 && 
+  //     Math.floor( agent.position.x ) >= Math.floor( newX ) - .3 ) &&
+  //   ( Math.floor( agent.position.z ) <= Math.floor( newY ) + .3 && 
+  //     Math.floor( agent.position.z ) >= Math.floor( newY ) - .3 )) {
+  //   agent.position.x = Math.floor( agent.position.x );
+  //   agent.position.z = Math.floor( agent.position.z );
+
+  //   // Reset any movements.
+  //   stopMovement();
+
+  //   // Maybe move should return a boolean. True if completed, false if not. 
+  //   }
 }
 
 // const controls = new TransformControls(camera, renderer.domElement)
@@ -278,14 +304,15 @@ var render = function () {
   
     // Render the scene
     renderer.render(scene, camera);
-    if(mixer){
-      mixer.update(.015);
-    }
+    
     
     
 
     if ( movements.length > 0 ) {
-      move( dummy, movements[ 0 ] );
+      if(mixer){
+        mixer.update(clock.getDelta());
+      }
+      move( dummy, movements[ 0 ], clock.getDelta());
     }
   };
   
