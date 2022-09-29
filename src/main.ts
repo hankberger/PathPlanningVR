@@ -5,14 +5,37 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
-import {testReturn} from './test.ts';
+import Pathing from './pathing';
+
+//UI
 
 
-export function test(){
-  return "test";
-}
+document.getElementById("goalbttn")?.addEventListener('click', (event)=>{
+  const posx = Math.random()*16 - 8;
+  const posz = Math.random()*16 - 8;
+  goal.position.x = posx;
+  goal.position.z = posz;
+  return;
+});
 
-console.log(testReturn());
+document.getElementById("objbttn")?.addEventListener('click', (event)=>{
+  for(let obj of objects){
+    const posx = Math.random()*16 - 8;
+    const posz = Math.random()*16 - 8;
+    obj.position.x = posx;
+    obj.position.z = posz;
+    obj.position.y = .5;
+  }
+  return;
+});
+
+document.getElementById("startbttn")?.addEventListener('click', (event)=>{
+  const path = new Pathing();
+  movements = path.getPath();
+  return;
+})
+
+let path = new Pathing();
 
 // SCENE
 const scene = new THREE.Scene();
@@ -36,7 +59,7 @@ const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true
 orbitControls.minDistance = 5
 orbitControls.maxDistance = 15
-orbitControls.enablePan = true
+orbitControls.enablePan = false
 orbitControls.maxPolarAngle = Math.PI / 2 - 0.05
 orbitControls.update();
 
@@ -49,6 +72,13 @@ const speed = .04;
 
 //OBSTACLES
 const numObstacles = 10;
+const goalGeo = new THREE.CylinderGeometry( 5, 5, 20, 32 );
+const goalMat = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+const goal = new THREE.Mesh( goalGeo, goalMat );
+goal.scale.set(.1, .01, .1);
+goal.material.transparent = true;
+goal.material.opacity = .65
+scene.add( goal );
 
 
 
@@ -67,9 +97,9 @@ function move(agent: Object3D, destination: Vector3, dt: number){
   let goalPos = new Vector2(destination.x, destination.z)
   
   let dir = goalPos.sub(curPos);
-
+  
   if(!rotationSet){
-    agent.lookAt(dir.x, 0, dir.y);
+    agent.lookAt(dir.x, .5, dir.y);
     rotationSet = true;
   }
 
@@ -87,33 +117,10 @@ function move(agent: Object3D, destination: Vector3, dt: number){
   }
 
   const vel = dir.multiplyScalar(speed);
-  const pos3d = new Vector3(vel.x, 0, vel.y);
   agent.position.add(new Vector3(vel.x, 0, vel.y));
   return;
 }
 
-// const controls = new TransformControls(camera, renderer.domElement)
-
-
-
-// const outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-// const composer.addPass( outlinePass );
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
-var cube = new THREE.Mesh( geometry, material );
-cube.position.y = .5;
-cube.castShadow = true;
-cube.receiveShadow = true;
-
-// Add cube to Scene
-scene.add( cube );
-
-
-// // LIGHTS
-// light()
-
-// // FLOOR
-// generateFloor()
 let mixer: AnimationMixer;
 //Load Model
 new GLTFLoader().load('scalefix.gltf', function (gltf) {
@@ -123,9 +130,7 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
           c.castShadow = true;
     });
     dummy = model;
-    console.log("dummy:", dummy);
     
-
     const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
     mixer = new THREE.AnimationMixer(model);
     const animationsMap: Map<string, THREE.AnimationAction> = new Map();
@@ -138,27 +143,6 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     anim?.play();
     scene.add(model);
 });
-
-// const loader = new FBXLoader();
-// loader.load('mixamoWalk.fbx', (fbx) => {
-//   fbx.scale.setScalar(0.01);
-//   fbx.traverse(c=>{
-//     c.castShadow = true;
-//   });
-
-//   const anim = new FBXLoader();
-//   anim.load('mixamoWalk.fbx', (anim)=>{
-//     const mixer = new THREE.AnimationMixer(fbx);
-//     const idle = mixer.clipAction(anim.animations[0]);
-//     idle.play();
-//   })
-
-//   scene.add(fbx);
-
-//   scene.add(fbx);
-// })
-
-const clock = new THREE.Clock();
 
 // RESIZE HANDLER
 function onWindowResize() {
@@ -218,6 +202,8 @@ function light() {
 
 light();
 
+const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
 function createObstacles(){
   for(let i = 0; i < numObstacles; i++){
     const posx = Math.random()*16 - 8;
@@ -229,55 +215,65 @@ function createObstacles(){
     iMesh.castShadow = true;
     iMesh.receiveShadow = true;
 
-    console.log("yeet!")
+    objects.push(iMesh);
     scene.add(iMesh)
   }
 }
-
 createObstacles();
 
-document.addEventListener( 'mousedown', onDocumentMouseDown );
-
-function onDocumentMouseDown( event: any ) {   
+// document.addEventListener( 'mousedown', onDocumentMouseDown );
+// function onDocumentMouseDown( event: any ) {   
   
-  event.preventDefault();
-  // if(event.which === 1){
-  //   var mouse3D = new THREE.Vector3( ( event.clientX/ window.innerWidth ) * 2 - 1,   
-  //                         -( event.clientY / window.innerHeight ) * 2 + 1,  
-  //                           0.5 );     
-  //   var raycaster =  new THREE.Raycaster();                                        
-  //   raycaster.setFromCamera( mouse3D, camera );
-  //   var intersects = raycaster.intersectObjects(scene.children);
+//   event.preventDefault();
+//   // if(event.which === 1){
+//   //   var mouse3D = new THREE.Vector3( ( event.clientX/ window.innerWidth ) * 2 - 1,   
+//   //                         -( event.clientY / window.innerHeight ) * 2 + 1,  
+//   //                           0.5 );     
+//   //   var raycaster =  new THREE.Raycaster();                                        
+//   //   raycaster.setFromCamera( mouse3D, camera );
+//   //   var intersects = raycaster.intersectObjects(scene.children);
 
     
-  //   if ( intersects.length > 0 ) {
-  //     if(!(intersects[0].object.geometry.type == 'PlaneGeometry')){
-  //       obj = intersects[0].object;
-  //       console.log(obj)
-  //       if(obj.hasOwnProperty('material') && obj.material.hasOwnProperty('emissive')){
-  //         obj.material.emissive.set(0xaaaaaa);
-  //         // controls.attach(obj);
-  //         // scene.add(controls);
-  //       }
+//   //   if ( intersects.length > 0 ) {
+//   //     if(!(intersects[0].object.geometry.type == 'PlaneGeometry')){
+//   //       obj = intersects[0].object;
+//   //       console.log(obj)
+//   //       if(obj.hasOwnProperty('material') && obj.material.hasOwnProperty('emissive')){
+//   //         obj.material.emissive.set(0xaaaaaa);
+//   //         // controls.attach(obj);
+//   //         // scene.add(controls);
+//   //       }
         
-  //     }
-  //   }
-  let mouse3D = new THREE.Vector3( ( event.clientX/ window.innerWidth ) * 2 - 1,   
-                        -( event.clientY / window.innerHeight ) * 2 + 1,  
-                          0.5 );     
+//   //     }
+//   //   }
+//   let mouse3D = new THREE.Vector3( ( event.clientX/ window.innerWidth ) * 2 - 1,   
+//                         -( event.clientY / window.innerHeight ) * 2 + 1,  
+//                           0.5 );     
 
-  var raycaster =  new THREE.Raycaster();                                        
-  raycaster.setFromCamera( mouse3D, camera );
+//   var raycaster =  new THREE.Raycaster();                                        
+//   raycaster.setFromCamera( mouse3D, camera );
 
-  // Grab all objects that can be intersected.
-  var intersects = raycaster.intersectObjects( scene.children );
-  if ( intersects.length > 0 ) {
-    console.log("intersections!>")
-    movements.push(intersects[ 0 ].point);
-  }
+//   // Grab all objects that can be intersected.
+//   var intersects = raycaster.intersectObjects( scene.children );
+//   if ( intersects.length > 0 ) {
+//     movements.push(intersects[ 0 ].point);
+//   }
+// }
+
+//Pathing Helper functions
+export function getObjects(){
+  return objects;
 }
 
+export function getStart(){
+  return dummy.position;
+}
 
+export function getGoal(){
+  return goal.position;
+}
+
+const clock = new THREE.Clock();
 var render = function () {
     requestAnimationFrame( render );
   
@@ -293,4 +289,4 @@ var render = function () {
     }
   };
   
-  render();
+render();

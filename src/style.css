@@ -2,3 +2,105 @@ body, html{
   margin: 0;
   padding: 0;
 }
+
+.ui{
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  display: flex;
+  flex-direction: column;
+  height: 225px;
+  width: 200px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, .50);
+  border: solid black 1px;
+}
+
+.ui h1{
+  margin: 0;
+  margin-top: 5px;
+  color: white;
+  width: 100%;
+  text-align: center;
+  font-family: komet-sc,sans-serif;
+  font-weight: 900;
+  font-style: normal;
+  font-size: 30pt;
+}
+
+.ui h2{
+  margin: 0;
+  color: white;
+  width: 100%;
+  text-align: center;
+  font-family: komet-sc,sans-serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 14pt;
+  margin-top: -10px;
+}
+
+.ui h3{
+  font-family: komet-sc, sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  color: white;
+  margin: 10px;
+  position: absolute;
+  bottom: 110px;
+}
+
+.slider {
+  position: absolute;
+  bottom: 90px;
+  width: 90%;
+  margin: 10px;
+}
+
+button{
+  width: auto;
+  margin: 10px;
+  border: none;
+  height: 35px;
+  border-radius: 5px;
+  font-family: komet-sc,sans-serif;
+  font-weight: 900;
+  font-style: normal;
+  font-size: 12pt;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  position: absolute;
+ 
+  width: 90%;
+  cursor: pointer;
+}
+
+.primary{
+  background-color: #FFBF00;
+  color: white;
+  /* border: solid white 2px; */
+  text-decoration: underline;
+  bottom: 0px;
+}
+
+.secondary{
+  background-color: white;
+  color: #333333;
+  border: solid white 1px;
+  bottom: 45px;
+  font-family: komet-sc, sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 10pt;
+}
+
+#objbttn{
+  width: 42.5%;
+  margin-right: 5px;
+}
+
+#goalbttn{
+  width: 42.5%;
+  left: 100px;
+  margin-left: 5px;
+}
+
