@@ -1,7 +1,7 @@
 // import { CharacterControls } from './characterControls';
 import * as THREE from 'three'
 import { AnimationMixer, CameraHelper, Color, Object3D, Vector2, Vector3 } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { MapControls, OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
@@ -18,15 +18,15 @@ slider?.addEventListener('input', (event)=>{
   while(slider.value > objects.length){
     const posx = Math.random()*16 - 8;
     const posz = Math.random()*16 - 8;
-    var iMesh = new THREE.Mesh(geometry, material);
-    iMesh.position.x = posx;
-    iMesh.position.z = posz;
-    iMesh.position.y = .5;
-    iMesh.castShadow = true;
-    iMesh.receiveShadow = true;
+    var newBarrel = barrel.clone();
+    newBarrel.position.x = posx;
+    newBarrel.position.z = posz;
+    newBarrel.position.y = .5;
+    newBarrel.castShadow = true;
+    newBarrel.receiveShadow = true;
 
-    objects.push(iMesh);
-    scene.add(iMesh)
+    objects.push(newBarrel);
+    scene.add(newBarrel)
   }
 
   while(slider.value < objects.length){
@@ -100,6 +100,10 @@ const numObstacles = 10;
 const goalGeo = new THREE.CylinderGeometry( 5, 5, 20, 32 );
 const goalMat = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
 const goal = new THREE.Mesh( goalGeo, goalMat );
+const goalposx = Math.random()*16 - 8;
+const goalposz = Math.random()*16 - 8;
+goal.position.x = goalposx;
+goal.position.z = goalposz;
 goal.scale.set(.1, .01, .1);
 goal.material.transparent = true;
 goal.material.opacity = .65
@@ -154,6 +158,12 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     model.traverse(c=>{
           c.castShadow = true;
     });
+    const dummyposx = Math.random()*16 - 8;
+    const dummyposz = Math.random()*16 - 8;
+    model.position.x = dummyposx;
+    model.position.z = dummyposz;
+    orbitControls.target = model.position;
+
     dummy = model;
     
     const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
@@ -167,6 +177,18 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     console.log(anim);
     anim?.play();
     scene.add(model);
+});
+
+let barrel: Object3D;
+new FBXLoader().load('darkblue.fbx', function(fbx){
+  fbx.scale.setScalar(0.004);
+  fbx.position.y = .6;
+  fbx.traverse((child)=>{
+    child.castShadow = true;
+  })
+  
+  barrel = fbx;
+  createObstacles();
 });
 
 // RESIZE HANDLER
@@ -233,18 +255,23 @@ function createObstacles(){
   for(let i = 0; i < numObstacles; i++){
     const posx = Math.random()*16 - 8;
     const posz = Math.random()*16 - 8;
-    var iMesh = new THREE.Mesh(geometry, material);
-    iMesh.position.x = posx;
-    iMesh.position.z = posz;
-    iMesh.position.y = .5;
-    iMesh.castShadow = true;
-    iMesh.receiveShadow = true;
+    const rotation = Math.random() * 360;
+    console.log(barrel)
+    var newBarrel = barrel.clone();
+    newBarrel.position.x = posx;
+    newBarrel.position.z = posz;
+    newBarrel.position.y = .5;
+    newBarrel.rotation.y = rotation;
 
-    objects.push(iMesh);
-    scene.add(iMesh)
+    newBarrel.castShadow = true;
+    newBarrel.receiveShadow = true;
+
+    objects.push(newBarrel);
+    scene.add(newBarrel)
   }
 }
-createObstacles();
+
+
 
 // document.addEventListener( 'mousedown', onDocumentMouseDown );
 // function onDocumentMouseDown( event: any ) {   
