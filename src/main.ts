@@ -5,7 +5,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
+import {testReturn} from './test.ts';
 
+
+export function test(){
+  return "test";
+}
+
+console.log(testReturn());
 
 // SCENE
 const scene = new THREE.Scene();
@@ -38,8 +45,12 @@ let movements: Vector3[] = [];
 let objects: THREE.Object3D[] = [];
 let dummy: THREE.Object3D;
 let rotationSet = false;
-const speed = .025;
-// const textureLoader = new THREE.TextureLoader('');
+const speed = .04;
+
+//OBSTACLES
+const numObstacles = 10;
+
+
 
 function stopMovement() {
   movements = [];
@@ -75,39 +86,10 @@ function move(agent: Object3D, destination: Vector3, dt: number){
     agent.position.z = destination.z;
   }
 
-  
-
   const vel = dir.multiplyScalar(speed);
   const pos3d = new Vector3(vel.x, 0, vel.y);
   agent.position.add(new Vector3(vel.x, 0, vel.y));
-  // console.log("moved!")
-
-  // let distance = Math.sqrt( diffX * diffX + diffY * diffY );
-
-  // if(posX > newX){
-  //   multiplierX = -1;
-  // }
-
-  // if(posY > newY){
-  //   multiplierY = -1;
-  // }
-
-  // agent.position.x = agent.position.x + (speed*(diffX / distance)) * multiplierX;
-  // agent.position.z = agent.position.z + (speed*(diffY / distance)) * multiplierY;
-  // console.log("moving!", agent.position);
-  //  // If the position is close we can call the movement complete.
-  //  if (( Math.floor( agent.position.x ) <= Math.floor( newX ) + .3 && 
-  //     Math.floor( agent.position.x ) >= Math.floor( newX ) - .3 ) &&
-  //   ( Math.floor( agent.position.z ) <= Math.floor( newY ) + .3 && 
-  //     Math.floor( agent.position.z ) >= Math.floor( newY ) - .3 )) {
-  //   agent.position.x = Math.floor( agent.position.x );
-  //   agent.position.z = Math.floor( agent.position.z );
-
-  //   // Reset any movements.
-  //   stopMovement();
-
-  //   // Maybe move should return a boolean. True if completed, false if not. 
-  //   }
+  return;
 }
 
 // const controls = new TransformControls(camera, renderer.domElement)
@@ -117,12 +99,14 @@ function move(agent: Object3D, destination: Vector3, dt: number){
 // const outlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
 // const composer.addPass( outlinePass );
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
 var cube = new THREE.Mesh( geometry, material );
+cube.position.y = .5;
 cube.castShadow = true;
+cube.receiveShadow = true;
 
 // Add cube to Scene
-// scene.add( cube );
+scene.add( cube );
 
 
 // // LIGHTS
@@ -234,8 +218,25 @@ function light() {
 
 light();
 
+function createObstacles(){
+  for(let i = 0; i < numObstacles; i++){
+    const posx = Math.random()*16 - 8;
+    const posz = Math.random()*16 - 8;
+    var iMesh = new THREE.Mesh(geometry, material);
+    iMesh.position.x = posx;
+    iMesh.position.z = posz;
+    iMesh.position.y = .5;
+    iMesh.castShadow = true;
+    iMesh.receiveShadow = true;
+
+    console.log("yeet!")
+    scene.add(iMesh)
+  }
+}
+
+createObstacles();
+
 document.addEventListener( 'mousedown', onDocumentMouseDown );
-let obj: THREE.Object3D;
 
 function onDocumentMouseDown( event: any ) {   
   
@@ -261,12 +262,12 @@ function onDocumentMouseDown( event: any ) {
         
   //     }
   //   }
-    let mouse3D = new THREE.Vector3( ( event.clientX/ window.innerWidth ) * 2 - 1,   
-                          -( event.clientY / window.innerHeight ) * 2 + 1,  
-                            0.5 );     
+  let mouse3D = new THREE.Vector3( ( event.clientX/ window.innerWidth ) * 2 - 1,   
+                        -( event.clientY / window.innerHeight ) * 2 + 1,  
+                          0.5 );     
 
-    var raycaster =  new THREE.Raycaster();                                        
-    raycaster.setFromCamera( mouse3D, camera );
+  var raycaster =  new THREE.Raycaster();                                        
+  raycaster.setFromCamera( mouse3D, camera );
 
   // Grab all objects that can be intersected.
   var intersects = raycaster.intersectObjects( scene.children );
@@ -274,45 +275,21 @@ function onDocumentMouseDown( event: any ) {
     console.log("intersections!>")
     movements.push(intersects[ 0 ].point);
   }
-
-  console.log('Movements' , movements);
-  
 }
-
-// const controls = new DragControls( scene.children, camera, renderer.domElement );
-
-// // add event listener to highlight dragged objects
-
-// controls.addEventListener( 'dragstart', function ( event:any ) {
-
-// 	event.object.material.emissive.set( 0xaaaaaa );
-
-// } );
-
-// controls.addEventListener( 'dragend', function ( event:any ) {
-
-// 	event.object.material.emissive.set( 0x000000 );
-
-// } );
 
 
 var render = function () {
     requestAnimationFrame( render );
   
-    // cube.rotation.x += 0.01;
-    // cube.rotation.y += 0.01;
-  
-    // Render the scene
     renderer.render(scene, camera);
     
-    
-    
-
     if ( movements.length > 0 ) {
       if(mixer){
         mixer.update(clock.getDelta());
       }
       move( dummy, movements[ 0 ], clock.getDelta());
+      orbitControls.target = dummy.position;
+      orbitControls.update();
     }
   };
   
