@@ -8,7 +8,32 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import Pathing from './pathing';
 
 //UI
+const uiObj = document.getElementById("numobj");
+const slider = document.getElementById('myRange');
+slider?.addEventListener('input', (event)=>{
+  if(uiObj){
+    uiObj.innerHTML = slider.value;
+  }
 
+  while(slider.value > objects.length){
+    const posx = Math.random()*16 - 8;
+    const posz = Math.random()*16 - 8;
+    var iMesh = new THREE.Mesh(geometry, material);
+    iMesh.position.x = posx;
+    iMesh.position.z = posz;
+    iMesh.position.y = .5;
+    iMesh.castShadow = true;
+    iMesh.receiveShadow = true;
+
+    objects.push(iMesh);
+    scene.add(iMesh)
+  }
+
+  while(slider.value < objects.length){
+    let cyl = objects.pop();
+    scene.remove(cyl);
+  }
+})
 
 document.getElementById("goalbttn")?.addEventListener('click', (event)=>{
   const posx = Math.random()*16 - 8;
@@ -202,7 +227,7 @@ function light() {
 
 light();
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+const geometry = new THREE.CylinderGeometry(.4, .4, 1.2, 16);
 const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
 function createObstacles(){
   for(let i = 0; i < numObstacles; i++){
