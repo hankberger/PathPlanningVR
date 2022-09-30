@@ -5,7 +5,7 @@ import { MapControls, OrbitControls } from 'three/examples/jsm/controls/OrbitCon
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
-import Pathing from './pathing';
+import Pathing from './PathingBetter';
 
 //UI
 const uiObj = document.getElementById("numobj");
@@ -125,11 +125,12 @@ function move(agent: Object3D, destination: Vector3, dt: number){
   let curPos = new Vector2(agent.position.x, agent.position.z);
   let goalPos = new Vector2(destination.x, destination.z)
   
-  let dir = goalPos.sub(curPos);
+  let dir = new Vector2();
+  dir.subVectors(goalPos, curPos);
   
   if(!rotationSet){
-    agent.lookAt(dir.x, .5, dir.y);
-    rotationSet = true;
+  agent.lookAt(dir.x, .5, dir.y);
+  rotationSet = true;
   }
 
   if(dir.length() < .25){
@@ -162,7 +163,7 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     const dummyposz = Math.random()*16 - 8;
     model.position.x = dummyposx;
     model.position.z = dummyposz;
-    orbitControls.target = model.position;
+    // orbitControls.target = model.position;
 
     dummy = model;
     
@@ -322,11 +323,49 @@ export function getObjects(){
 }
 
 export function getStart(){
+  console.log(dummy.position);
   return dummy.position;
 }
 
 export function getGoal(){
   return goal.position;
+}
+
+export function visuzlizeNodes(nodes: Vector3[]){
+  const geometry = new THREE.CylinderGeometry(.1, .1, 1.2, 8);
+  const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
+  
+  
+  for(let node of nodes){
+    const AAA = new THREE.Mesh(geometry, material);
+    AAA.position.x = node.x;
+    AAA.position.y = .6;
+    AAA.position.z = node.z;
+    // dotGeometry.vertices.push(new THREE.Vector3( 0, 0, 0));
+    
+    
+    // dot.position.add(node);
+    // dot.position.y = .1;
+    scene.add( AAA );
+  }
+
+  return;
+}
+
+export function visualizeNeighbors(nodes: Vector3[], neighbors: number[][]){
+  const material = new THREE.LineBasicMaterial({
+    color: 0x0000ff
+  });
+  for(let i = 0; i < nodes.length; i++){
+    for(let j = 0; j < neighbors[i].length; j++){
+      const points = [];
+      points.push(nodes[i]);
+      points.push(nodes[neighbors[i][j]]);
+      const geometry = new THREE.BufferGeometry().setFromPoints( points );
+      const line = new THREE.Line( geometry, material );
+      scene.add(line);
+    }
+  }
 }
 
 const clock = new THREE.Clock();

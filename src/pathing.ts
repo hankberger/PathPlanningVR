@@ -11,6 +11,9 @@ export default class Pathing {
     private visited: boolean[]; //A list which store if a given node has been visited
     private parent: number[];
 
+    //Nodes:
+    private nodePos: Vector3[];
+
     constructor(){
         this.path = [];
         this.objects = [];
@@ -19,11 +22,21 @@ export default class Pathing {
         this.neighbors = [];
         this.visited = [];
         this.parent = [];
+        this.nodePos = [];
     }
 
     public getPath(){
-        // this.planPath(this.start, this.goal, this.getCenters(), this.getRadii(), this.objects.length, this.getCenters(), this.objects.length);
-        this.calculatePath();
+        this.objects = getObjects(); //Here's the scene objects.
+        this.start = getStart(); //Vector3 of start position. Use x and z coordinates for 2d. (y coord is up)
+        this.goal = getGoal();
+        const pathNum = this.planPath(this.start, this.goal, this.getCenters(), this.getRadii(), this.objects.length, this.getCenters(), this.objects.length);
+        console.log(pathNum);
+        let bfsPath = [];
+        for(let i of pathNum){
+            bfsPath.push(this.nodePos[i]);
+        }
+        this.path = bfsPath;
+        // console.log(this.path);
         return this.path;
     }
 
@@ -43,6 +56,20 @@ export default class Pathing {
         }
         return radii;
     }
+
+    private generateRandomNodes(numNodes: number, circleCenters: Vector3[], circleRadii: number[]){
+        for (let i = 0; i < numNodes; i++){
+          let randPos = new Vector3(Math.random() * 16 - 8, 0, Math.random()* 16 - 8);
+          let insideAnyCircle = pointInCircleList(circleCenters,circleRadii,this.objects.length,randPos,2);
+          //boolean insideBox = pointInBox(boxTopLeft, boxW, boxH, randPos);
+          while (insideAnyCircle){
+            randPos = new Vector3(Math.random() * 16 - 8, 0, Math.random()* 16 - 8);
+            insideAnyCircle = pointInCircleList(circleCenters,circleRadii,this.objects.length,randPos,2);
+            //insideBox = pointInBox(boxTopLeft, boxW, boxH, randPos);
+          }
+          this.nodePos[i] = randPos;
+        }
+      }
 
     private calculatePath(){
         this.objects = getObjects(); //Here's the scene objects.
@@ -102,7 +129,10 @@ export default class Pathing {
         let path: number[] = [];
       
         // Degenerate case: no obstacles between start and goal
+
         if (this.canSeeEachOther(centers, radii, numObstacles, goalPos, startPos)) return path;
+
+        console.log("Valid path");
         
         const startID = this.closestNode(startPos, nodePos, numNodes, centers, radii, numObstacles);
         const goalID = this.closestNode(goalPos, nodePos, numNodes, centers, radii, numObstacles);

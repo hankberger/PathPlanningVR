@@ -12,16 +12,16 @@ export function pointInCircle(center: Vector3, r: number, pointPos: Vector3, eps
   
   //Returns true if the point is inside a list of circle
   //You must consider a point as colliding if it's distance is <= eps
-export function pointInCircleList(centers: Vector3[], radii: number[], numObstacles: number, pointPos: Vector3, eps: number): boolean{
+export function pointInCircleList(centers: Vector3[], radii: number, numObstacles: number, pointPos: Vector3, eps: number): boolean{
     for (let i = 0; i < numObstacles; i++){
       const center =  centers[i];
-      const r = radii[i];
+      const r = radii;
       if (pointInCircle(center,r,pointPos, eps)){
         return true;
       }
     }
     return false;
-  }
+}
   
   
 export class hitInfo{
@@ -33,8 +33,11 @@ export function rayCircleIntersect(center: Vector3, r: number, l_start: Vector3,
     const hit = new hitInfo();
     
     //Step 2: Compute W - a displacement vector pointing from the start of the line segment to the center of the circle
-      const toCircle = center.sub(l_start);
-      const strokeWidth = 2;
+      let toCircle = new Vector3();
+      toCircle.subVectors(center, l_start);
+      const strokeWidth = .2;
+
+
       
       //Step 3: Solve quadratic equation for intersection point (in terms of l_dir and toCircle)
       const a = 1;  //Length of l_dir (we normalized it)
@@ -63,12 +66,12 @@ export function rayCircleIntersect(center: Vector3, r: number, l_start: Vector3,
     return hit;
   }
   
-export function rayCircleListIntersect(centers: Vector3[], radii: number[], numObstacles: number, l_start: Vector3, l_dir: Vector3, max_t: number){
+export function  rayCircleListIntersect(centers: Vector3[], radii: number, numObstacles: number, l_start: Vector3, l_dir: Vector3, max_t: number){
     const hit = new hitInfo();
     hit.t = max_t;
     for (let i = 0; i < numObstacles; i++){
       const center = centers[i];
-      const r = radii[i];
+      const r = radii;
       
       const circleHit = rayCircleIntersect(center, r, l_start, l_dir, hit.t);
       if (circleHit.t > 0 && circleHit.t < hit.t){
@@ -81,5 +84,5 @@ export function rayCircleListIntersect(centers: Vector3[], radii: number[], numO
       }
     }
     return hit;
-  }
+}
   
