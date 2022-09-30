@@ -1,6 +1,7 @@
-import { Object3D, Vector, Vector3 } from 'three';
-import {getObjects, getStart, getGoal, visuzlizeNodes, visualizeNeighbors, visualizePath} from './main';
-import {pointInCircle, pointInCircleList, hitInfo, rayCircleIntersect, rayCircleListIntersect} from './collision';
+//@ts-nocheck
+import { Object3D, Vector3 } from 'three';
+import {getObjects, getStart, getGoal,  visualizePath} from './main';
+import { pointInCircleList,rayCircleListIntersect} from './collision';
 
 export default class Pathing {
     private obstacles: Object3D[];
@@ -143,70 +144,70 @@ export default class Pathing {
     return closestID;
 }
 
-  private canSeeEachOther(centers: Vector3[], radii: number, numObstacles: number, goal: Vector3, start: Vector3): boolean {
-    const dir = new Vector3();
-    dir.subVectors(goal, start).normalize();
-    const distBetween = goal.distanceTo(start);
-    const circleListCheck = rayCircleListIntersect(centers, this.radius, numObstacles, start, dir, distBetween);
-    return !circleListCheck.hit;
-  }
+  // private canSeeEachOther(centers: Vector3[], radii: number, numObstacles: number, goal: Vector3, start: Vector3): boolean {
+  //   const dir = new Vector3();
+  //   dir.subVectors(goal, start).normalize();
+  //   const distBetween = goal.distanceTo(start);
+  //   const circleListCheck = rayCircleListIntersect(centers, this.radius, numObstacles, start, dir, distBetween);
+  //   return !circleListCheck.hit;
+  // }
 
 
-  private runBFS(nodePos: Vector3[], numNodes: number, startID: number, goalID: number): number[]{
-    const fringe: number[] = [];  //New empty fringe
-    const path: number[] = [];
-    for (let i = 0; i < numNodes; i++) { //Clear visit tags and parent pointers
-      this.visited[i] = false;
-      this.parent[i] = -1; //No parent yet
-    }
+  // private runBFS(nodePos: Vector3[], numNodes: number, startID: number, goalID: number): number[]{
+  //   const fringe: number[] = [];  //New empty fringe
+  //   const path: number[] = [];
+  //   for (let i = 0; i < numNodes; i++) { //Clear visit tags and parent pointers
+  //     this.visited[i] = false;
+  //     this.parent[i] = -1; //No parent yet
+  //   }
   
-    //println("\nBeginning Search");
+  //   //println("\nBeginning Search");
     
-    this.visited[startID] = true;
-    fringe.push(startID);
-    //println("Adding node", startID, "(start) to the fringe.");
-    //println(" Current Fringe: ", fringe);
+  //   this.visited[startID] = true;
+  //   fringe.push(startID);
+  //   //println("Adding node", startID, "(start) to the fringe.");
+  //   //println(" Current Fringe: ", fringe);
     
-    while (fringe.length > 0){
-      const currentNode = fringe.shift();
+  //   while (fringe.length > 0){
+  //     const currentNode = fringe.shift();
       
-      if (currentNode == goalID){
-        //println("Goal found!");
-        break;
-      }
-      for (let i = 0; i < this.neighbors[currentNode ?? 0].length; i++){
-        const neighborNode = this.neighbors[currentNode ?? 0][i];
-        if (!this.visited[neighborNode]){
-          this.visited[neighborNode] = true;
-          this.parent[neighborNode] = currentNode ?? 0;
-          fringe.push(neighborNode);
-          //println("Added node", neighborNode, "to the fringe.");
-          //println(" Current Fringe: ", fringe);
-        }
-      } 
-    }
+  //     if (currentNode == goalID){
+  //       //println("Goal found!");
+  //       break;
+  //     }
+  //     for (let i = 0; i < this.neighbors[currentNode ?? 0].length; i++){
+  //       const neighborNode = this.neighbors[currentNode ?? 0][i];
+  //       if (!this.visited[neighborNode]){
+  //         this.visited[neighborNode] = true;
+  //         this.parent[neighborNode] = currentNode ?? 0;
+  //         fringe.push(neighborNode);
+  //         //println("Added node", neighborNode, "to the fringe.");
+  //         //println(" Current Fringe: ", fringe);
+  //       }
+  //     } 
+  //   }
     
-    if (fringe.length == 0){
-      //println("No Path");
-      path.unshift(-1);
-      return path;
-    }
+  //   if (fringe.length == 0){
+  //     //println("No Path");
+  //     path.unshift(-1);
+  //     return path;
+  //   }
       
-    //print("\nReverse path: ");
-    let prevNode = this.parent[goalID];
-    path.unshift(goalID);
-    //print(goalID, " ");
-    while (prevNode >= 0){
-      //print(prevNode," ");
-      path.unshift(prevNode);
-      prevNode = this.parent[prevNode];
-    }
-    //print("\n");
+  //   //print("\nReverse path: ");
+  //   let prevNode = this.parent[goalID];
+  //   path.unshift(goalID);
+  //   //print(goalID, " ");
+  //   while (prevNode >= 0){
+  //     //print(prevNode," ");
+  //     path.unshift(prevNode);
+  //     prevNode = this.parent[prevNode];
+  //   }
+  //   //print("\n");
   
-    console.log("path", path);
+  //   console.log("path", path);
 
-    return path;
-  }
+  //   return path;
+  // }
 
   private runUCS(nodePos: Vector3[], numNodes: number, startID: number, goalID: number): number[]{
     const fringe = new Map();  //New empty fringe

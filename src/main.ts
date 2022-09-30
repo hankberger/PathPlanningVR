@@ -1,10 +1,9 @@
-// import { CharacterControls } from './characterControls';
+//@ts-nocheck
 import * as THREE from 'three'
-import { AnimationMixer, CameraHelper, Color, Mesh, Object3D, Vector2, Vector3 } from 'three';
-import { MapControls, OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { AnimationMixer, Color, Object3D, Vector2, Vector3 } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import Pathing from './PathingBetter';
 import { pointInCircleList } from './collision';
 
@@ -12,6 +11,7 @@ import { pointInCircleList } from './collision';
 const uiObj = document.getElementById("numobj");
 
 const slider = document.getElementById('myRange');
+
 if(uiObj){
   uiObj.innerHTML = slider.value;
 }
