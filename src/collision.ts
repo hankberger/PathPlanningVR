@@ -35,7 +35,7 @@ export function rayCircleIntersect(center: Vector3, r: number, l_start: Vector3,
     //Step 2: Compute W - a displacement vector pointing from the start of the line segment to the center of the circle
       let toCircle = new Vector3();
       toCircle.subVectors(center, l_start);
-      const strokeWidth = .2;
+      const strokeWidth = .3;
 
 
       

@@ -6,10 +6,15 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import Pathing from './PathingBetter';
+import { pointInCircleList } from './collision';
 
 //UI
 const uiObj = document.getElementById("numobj");
+
 const slider = document.getElementById('myRange');
+if(uiObj){
+  uiObj.innerHTML = slider.value;
+}
 slider?.addEventListener('input', (event)=>{
   if(uiObj){
     uiObj.innerHTML = slider.value;
@@ -33,13 +38,14 @@ slider?.addEventListener('input', (event)=>{
     let cyl = objects.pop();
     scene.remove(cyl);
   }
+
+  scene.remove(goal)
+  generateGoal();
 })
 
 document.getElementById("goalbttn")?.addEventListener('click', (event)=>{
-  const posx = Math.random()*16 - 8;
-  const posz = Math.random()*16 - 8;
-  goal.position.x = posx;
-  goal.position.z = posz;
+  const freeSpace = setFreeLocation(0, getCenters());
+  goal.position.set(freeSpace.x, 0, freeSpace.z);
   return;
 });
 
@@ -96,23 +102,43 @@ let rotationSet = false;
 const speed = .04;
 
 //OBSTACLES
-const numObstacles = 10;
+const numObstacles = slider.value;
 const goalGeo = new THREE.CylinderGeometry( 5, 5, 20, 32 );
 const goalMat = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
 const goal = new THREE.Mesh( goalGeo, goalMat );
-const goalposx = Math.random()*16 - 8;
-const goalposz = Math.random()*16 - 8;
-goal.position.x = goalposx;
-goal.position.z = goalposz;
-goal.scale.set(.1, .01, .1);
-goal.material.transparent = true;
-goal.material.opacity = .65
-scene.add( goal );
+
+function generateGoal(){
+  const freeSpace = setFreeLocation(0, getCenters());
+  goal.position.set(freeSpace.x, 0, freeSpace.z);
+  goal.scale.set(.1, .01, .1);
+  goal.material.transparent = true;
+  goal.material.opacity = .65
+  scene.add( goal );
+}
 
 
 
-function stopMovement() {
-  movements = [];
+function setFreeLocation(numNodes: number, circleCenters: Vector3[]): Vector3{
+    let randPos = new Vector3(Math.random() * 16 - 8, 0, Math.random()* 16 - 8);
+    let insideAnyCircle = pointInCircleList(circleCenters, .5, objects.length, randPos,.5);
+    //boolean insideBox = pointInBox(boxTopLeft, boxW, boxH, randPos);
+    while (insideAnyCircle){
+      randPos = new Vector3(Math.random() * 16 - 8, 0, Math.random()* 16 - 8);
+      insideAnyCircle = pointInCircleList(circleCenters, .5, objects.length, randPos,.5);
+      //insideBox = pointInBox(boxTopLeft, boxW, boxH, randPos);
+    }
+
+    return randPos;
+}
+
+function getCenters(): Vector3[]{
+  let obsCenters = [];
+  for(let obj of objects){
+    const vec = new Vector3(obj.position.x, obj.position.y, obj.position.z)
+    obsCenters.push(vec);
+  }
+
+  return obsCenters;
 }
 
 const axesHelper = new THREE.AxesHelper( 5 );
@@ -122,16 +148,36 @@ scene.add( axesHelper );
 
 
 function move(agent: Object3D, destination: Vector3, dt: number){
+  if(!destination){
+    alert("No Path Found! Randomize Goal / Objects and Try again.");
+    movements = [];
+    return;
+  }
+
   let curPos = new Vector2(agent.position.x, agent.position.z);
   let goalPos = new Vector2(destination.x, destination.z)
-  
+
   let dir = new Vector2();
   dir.subVectors(goalPos, curPos);
-  
-  if(!rotationSet){
-  agent.lookAt(dir.x, .5, dir.y);
-  rotationSet = true;
+
+  let goalRotation = Math.atan2(dir.x, dir.y);
+
+
+
+  if(Math.abs((agent.rotation.y) - goalRotation) < .15){
+    //Do nothing
+  } else if(agent.rotation.y < (agent.rotation.y + goalRotation) / 2){
+    agent.rotation.y += .1;
+  } else {
+    agent.rotation.y -= .1;
   }
+  // agent.rotation.y = (agent.rotation.y + goalRotation) / 2;
+
+  // if(!rotationSet){
+  //   // agent.lookAt(destination.x, 0, destination.z);
+  //   agent.rotation.y = goalRotation;
+  //   rotationSet = true;
+  // }
 
   if(dir.length() < .25){
     movements.shift();
@@ -164,8 +210,12 @@ new GLTFLoader().load('scalefix.gltf', function (gltf) {
     model.position.x = dummyposx;
     model.position.z = dummyposz;
     // orbitControls.target = model.position;
+    
 
     dummy = model;
+
+    orbitControls.target = dummy.position;
+    orbitControls.update();
     
     const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
     mixer = new THREE.AnimationMixer(model);
@@ -274,6 +324,8 @@ function createObstacles(){
     objects.push(newBarrel);
     scene.add(newBarrel)
   }
+
+  generateGoal();
 }
 
 
@@ -331,19 +383,24 @@ export function getGoal(){
   return goal.position;
 }
 
+let nodeVisualzation: Object3D[] = [];
 export function visuzlizeNodes(nodes: Vector3[]){
-  const geometry = new THREE.CylinderGeometry(.1, .1, 1.2, 8);
+  for(let i of nodeVisualzation){
+    scene.remove(i);
+  }
+  nodeVisualzation = [];
+  const geometry = new THREE.CylinderGeometry(.1, .1, .2, 8);
   const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
   
   
   for(let node of nodes){
     const AAA = new THREE.Mesh(geometry, material);
     AAA.position.x = node.x;
-    AAA.position.y = .6;
+    AAA.position.y = .05;
     AAA.position.z = node.z;
     // dotGeometry.vertices.push(new THREE.Vector3( 0, 0, 0));
     
-    
+    nodeVisualzation.push(AAA);  
     // dot.position.add(node);
     // dot.position.y = .1;
     scene.add( AAA );
@@ -366,6 +423,39 @@ export function visualizeNeighbors(nodes: Vector3[], neighbors: number[][]){
       scene.add(line);
     }
   }
+}
+
+
+export function visualizePath(nodes: Vector3[], neighbors: number[][], path: Vector3[]){
+  const material = new THREE.LineBasicMaterial({
+    color: 0x0000ff
+  });
+  // for(let i = 0; i < nodes.length; i++){
+  //   for(let j = 0; j < neighbors[i].length; j++){
+  //     const points = [];
+  //     points.push(nodes[i]);
+  //     points.push(nodes[neighbors[i][j]]);
+  //     const geometry = new THREE.BufferGeometry().setFromPoints( points );
+  //     const line = new THREE.Line( geometry, material );
+  //     scene.add(line);
+  //   }
+  // }
+  visuzlizeNodes(path);
+
+  for(let i = 0; i < path.length - 1; i++){
+    const points = [];
+    points.push(path[i]);
+    points.push(path[i+1]);
+    console.log(path, points);
+    if(points.length === 0) return;
+    const geometry = new THREE.BufferGeometry().setFromPoints( points );
+    const line = new THREE.Line( geometry, material );
+    
+    scene.add(line);
+    nodeVisualzation.push(line);
+  }
+
+  
 }
 
 const clock = new THREE.Clock();

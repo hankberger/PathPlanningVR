@@ -1,5 +1,5 @@
 import { Object3D, Vector, Vector3 } from 'three';
-import {getObjects, getStart, getGoal, visuzlizeNodes, visualizeNeighbors} from './main';
+import {getObjects, getStart, getGoal, visuzlizeNodes, visualizeNeighbors, visualizePath} from './main';
 import {pointInCircle, pointInCircleList, hitInfo, rayCircleIntersect, rayCircleListIntersect} from './collision';
 
 export default class Pathing {
@@ -35,7 +35,7 @@ export default class Pathing {
 
       // while(true){
         this.generateRandomNodes(this.numberOfNodes, this.getCenters());
-        visuzlizeNodes(this.nodePos);
+        // visuzlizeNodes(this.nodePos);
 
         this.connectNeighbors(this.getCenters(), this.radius, this.obstacles.length, this.nodePos, this.numberOfNodes);
         // visualizeNeighbors(this.nodePos, this.neighbors);
@@ -44,7 +44,10 @@ export default class Pathing {
         const goalID = this.closestNode(this.goal, this.nodePos, this.numberOfNodes, this.getCenters(), this.radius, this.obstacles.length);
         console.log("start:", startID, "goalid:", goalID)
 
-        const nodeOrder = this.runBFS(this.nodePos, this.numberOfNodes, startID, goalID);
+        // const nodeOrder = this.runBFS(this.nodePos, this.numberOfNodes, startID, goalID);
+        const nodeOrder = this.runUCS(this.nodePos, this.numberOfNodes, startID, goalID);
+
+        
         
         if(nodeOrder.length === 0){
           console.log("case 1");
@@ -63,11 +66,10 @@ export default class Pathing {
         }
       
         retPath.push(this.goal);
+
+        visualizePath(this.nodePos, this.neighbors, retPath);
         return retPath;
-        // }
-
-
-      
+   
     }
 
     private getCenters(): Vector3[]{
@@ -185,6 +187,72 @@ export default class Pathing {
     }
     
     if (fringe.length == 0){
+      //println("No Path");
+      path.unshift(-1);
+      return path;
+    }
+      
+    //print("\nReverse path: ");
+    let prevNode = this.parent[goalID];
+    path.unshift(goalID);
+    //print(goalID, " ");
+    while (prevNode >= 0){
+      //print(prevNode," ");
+      path.unshift(prevNode);
+      prevNode = this.parent[prevNode];
+    }
+    //print("\n");
+  
+    console.log("path", path);
+
+    return path;
+  }
+
+  private runUCS(nodePos: Vector3[], numNodes: number, startID: number, goalID: number): number[]{
+    const fringe = new Map();  //New empty fringe
+    const path: number[] = [];
+    for (let i = 0; i < numNodes; i++) { //Clear visit tags and parent pointers
+      this.visited[i] = false;
+      this.parent[i] = -1; //No parent yet
+    }
+  
+    //println("\nBeginning Search");
+    
+    this.visited[startID] = true;
+    fringe.set(startID, 0);
+    
+    while (fringe.size > 0){
+      let min = 999999;
+      let minNode: number = -1;
+      fringe.forEach((cost, key) =>{
+        if(cost < min){
+          minNode = key;
+          min = cost;
+        }
+      });
+
+      fringe.delete(minNode);
+      
+      if (minNode == goalID){
+        //println("Goal found!");
+        break;
+      }
+
+      for (let i = 0; i < this.neighbors[minNode ?? 0].length; i++){
+        const neighborNode = this.neighbors[minNode ?? 0][i];
+        if (!this.visited[neighborNode]){
+          this.visited[neighborNode] = true;
+          this.parent[neighborNode] = minNode ?? 0;
+          const cost = new Vector3();
+          cost.subVectors(nodePos[neighborNode], nodePos[minNode]);
+          fringe.set(neighborNode, min+(cost).length());
+          //println("Added node", neighborNode, "to the fringe.");
+          //println(" Current Fringe: ", fringe);
+        }
+      } 
+    }
+    
+    if (fringe.size == 0){
       //println("No Path");
       path.unshift(-1);
       return path;
