@@ -1,6 +1,6 @@
 // import { CharacterControls } from './characterControls';
 import * as THREE from 'three'
-import { AnimationMixer, CameraHelper, Color, Object3D, Vector2, Vector3 } from 'three';
+import { AnimationMixer, CameraHelper, Color, Mesh, Object3D, Vector2, Vector3 } from 'three';
 import { MapControls, OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
@@ -249,8 +249,12 @@ function light() {
 
 light();
 
-const geometry = new THREE.CylinderGeometry(.4, .4, 1.2, 16);
-const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
+// const geometry = new THREE.CylinderGeometry(.4, .4, 1.2, 16);
+// const material = new THREE.MeshPhongMaterial( {color: 0xffffff} );
+// const AAA = new THREE.Mesh(geometry, material);
+// AAA.position.y = .6;
+// scene.add(AAA);
+
 function createObstacles(){
   for(let i = 0; i < numObstacles; i++){
     const posx = Math.random()*16 - 8;
