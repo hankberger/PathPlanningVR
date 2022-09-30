@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
 import {getObjects, getStart, getGoal} from './main';
+import {pointInCircle, pointInCircleList, hitInfo, rayCircleIntersect, rayCircleListIntersect} from './collision';
 
 export default class Pathing {
     private path: THREE.Vector3[];
