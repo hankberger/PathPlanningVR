@@ -6,6 +6,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader';
 import Pathing from './PathingBetter';
 import { pointInCircleList } from './collision';
+import { VRButton } from 'three/addons/webxr/VRButton.js';
+document.body.appendChild( VRButton.createButton( renderer ) );
+renderer.xr.enabled = true;
 
 //UI
 const uiObj = document.getElementById("numobj");
